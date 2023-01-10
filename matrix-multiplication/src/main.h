@@ -7,33 +7,10 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "lab1_IO.h"
 #include "timer.h"
-
-
-typedef struct {
-    int x;
-    int y;
-} BlockCoordinates;
-
-
-/**
- * Necessary arguments for each thread to perform matrix multiplication.
- *
- * @param A matrix A
- * @param B matrix B
- * @param C matrix C
- * @param n matrix size
- * @param p number of threads
- */
-typedef struct {
-    int** A;
-    int** B;
-    int** C;
-    int p;
-    int k;
-} Arguments;
 
 
 /**
@@ -42,13 +19,12 @@ typedef struct {
  * @param p number of threads
  * @return
  */
-BlockCoordinates block_assignment(int k, int p);
 
 
 void* cell_multiplication(void * arg);
 
 
-double verify_result(int **A, int **B, int **C, int n);
+double verify_result();
 
 
 #endif //MATRIX_MULTIPLICATION_MAIN_H
