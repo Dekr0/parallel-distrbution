@@ -48,7 +48,7 @@ BlockCoordinates block_assignment(int k, int p);
 void* cell_multiplication(void * arg);
 
 
-double verify_result(int **A, int **B, int **C, int n);
+double single_thread_multiplication(int **A, int **B, int **C, int n);
 
 
 #endif //MATRIX_MULTIPLICATION_MAIN_H

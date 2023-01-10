@@ -3,9 +3,11 @@
 
 int main() {
     // Pointer to matrix A and matrix B
-    int **A, **B;
+    int **A; 
+    int **B;
 
-    int n = 0; // Dimension of all matrices
+    // Used to store dimensions of all matrices
+    int n = 0;
 
     // Read the matrix A and matrix B from the input file
     int status = Lab1_loadinput(&A, &B, &n);
@@ -13,7 +15,8 @@ int main() {
         return 1;
     }
 
-    int p = n * n; // Number of threads
+    // Number of threads
+    int p = n * n;
 
     // Allocate memory for resulting matrix
     int **C = malloc(n * sizeof(int*));
@@ -53,7 +56,7 @@ int main() {
 
 
     /* --- Matrix Calculation using Single Thread --- */
-    double runtime = verify_result(A, B, C, n);
+    double runtime = single_thread_multiplication(A, B, C, n);
     printf("TIme (Single Thread):%f\n", runtime);
 
     for (int i = 0; i < n; ++i) {
@@ -92,7 +95,7 @@ void* cell_multiplication(void* arg) {
     return 0;
 }
 
-double verify_result(int **A, int **B, int **C, int n) {
+double single_thread_multiplication(int **A, int **B, int **C, int n) {
     double start = 0, end = 0;
 
     GET_TIME(start);
