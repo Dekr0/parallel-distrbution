@@ -90,6 +90,7 @@ void* cell_multiplication(void* arg) {
 
     BlockCoordinates block = block_assignment(k, p);
 
+    printf("%d * %d = %d\n", A[block.x][block.y], B[block.x][block.y], A[block.x][block.y] * B[block.x][block.y]);
     C[block.x][block.y] = A[block.x][block.y] * B[block.x][block.y];
 
     return 0;
