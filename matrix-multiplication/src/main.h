@@ -2,11 +2,14 @@
 #define MATRIX_MULTIPLICATION_MAIN_H
 
 
+#include <assert.h>
 #include <math.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
+
+#include "lab1_IO.h"
+#include "timer.h"
 
 
 typedef struct {
@@ -28,7 +31,7 @@ typedef struct {
     int** A;
     int** B;
     int** C;
-    int n;
+    int p;
     int k;
 } Arguments;
 
@@ -45,18 +48,7 @@ BlockCoordinates block_assignment(int k, int p);
 void* cell_multiplication(void * arg);
 
 
-/*
- * Read the matrix from the file
- */
-int** read_matrix(FILE* fptr, int n);
+double verify_result(int **A, int **B, int **C, int n);
 
-
-/*
- * Read the dimension of the square matrix
- */
-int read_matrix_size(FILE * fptr);
-
-
-int split(char *str, char c, char ***arr);
 
 #endif //MATRIX_MULTIPLICATION_MAIN_H
