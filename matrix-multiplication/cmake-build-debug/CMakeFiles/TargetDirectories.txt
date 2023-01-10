@@ -1,0 +1,4 @@
+/home/dekr0/Codebase/parallel-distriution/matrix-multiplication/cmake-build-debug/CMakeFiles/matrix_multiplication.dir
+/home/dekr0/Codebase/parallel-distriution/matrix-multiplication/cmake-build-debug/CMakeFiles/matrixgen.dir
+/home/dekr0/Codebase/parallel-distriution/matrix-multiplication/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/dekr0/Codebase/parallel-distriution/matrix-multiplication/cmake-build-debug/CMakeFiles/rebuild_cache.dir
