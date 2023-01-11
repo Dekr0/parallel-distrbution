@@ -2,6 +2,8 @@
 
 
 int main() {
+    // number of thread is given by thread
+
     // Pointer to matrix A and matrix B
     int **A; 
     int **B;
@@ -28,7 +30,7 @@ int main() {
     pthread_t threads[p];
 
     double start = 0, end = 0;
-    GET_TIME(start);
+    GET_TIME(start)
 
     for (int i = 0; i < p; ++i) {
         Arguments *args = malloc(sizeof(Arguments));
@@ -50,7 +52,7 @@ int main() {
         }
     }
 
-    GET_TIME(end);
+    GET_TIME(end)
 
     printf("Time (Threading): %f\n", end - start);
 
@@ -98,13 +100,13 @@ void* cell_multiplication(void* arg) {
 double single_thread_multiplication(int **A, int **B, int **C, int n) {
     double start = 0, end = 0;
 
-    GET_TIME(start);
+    GET_TIME(start)
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             assert(C[i][j] == A[i][j] * B[i][j]);
         }
     }
-    GET_TIME(end);
+    GET_TIME(end)
 
     return end - start;
 }
