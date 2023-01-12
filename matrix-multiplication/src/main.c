@@ -1,15 +1,18 @@
 #include "main.h"
 
 
-int main() {
-    // number of thread is given by thread
+int main(int argc, char* argv[]) {
+    if (argc != 2)
+        return 1;
 
-    // Pointer to matrix A and matrix B
-    int **A; 
-    int **B;
+    // Dimension of the matrix;
+    // number of thread is given by users input, a square number and factor of n^2
+    int n = 0, p = (int) strtol(argv[1], NULL, 10);
 
-    // Used to store dimensions of all matrices
-    int n = 0;
+    if (n * n % p != 0 && sqrt(p)22)
+
+    // Pointer to matrix A, matrix B, and matrix C
+    int **A, **B, **C;
 
     // Read the matrix A and matrix B from the input file
     int status = Lab1_loadinput(&A, &B, &n);
@@ -17,49 +20,28 @@ int main() {
         return 1;
     }
 
-    // Number of threads
-    int p = n * n;
-
     // Allocate memory for resulting matrix
-    int **C = malloc(n * sizeof(int*));
+    C = malloc(n * sizeof(int*));
     for (int i = 0; i < n; i++) {
         C[i] = malloc(n * sizeof(int));
+
+        memset(C[i], 0, n * sizeof(int));
     }
 
-    /* --- Matrix Calculation using Threading --- */
-    pthread_t threads[p];
+    double runtime = 0;
 
-    double start = 0, end = 0;
-    GET_TIME(start)
+//    runtime = multi_thread_multiplication(A, B, C, n, p);
+//    printf("Time (Multi threading): %f\n", runtime);
 
-    for (int i = 0; i < p; ++i) {
-        Arguments *args = malloc(sizeof(Arguments));
-        args->A = A;
-        args->B = B;
-        args->C = C;
-        args->p = p;
-        args->k = i;
-        status = pthread_create(&threads[i], NULL, cell_multiplication, args);
-        if (status != 0) {
-            return 1;
-        }
-    }
-
-    for (int i = 0; i < p; ++i) {
-        status = pthread_join(threads[i], NULL);
-        if (status != 0) {
-            return 1;
-        }
-    }
-
-    GET_TIME(end)
-
-    printf("Time (Threading): %f\n", end - start);
-
-
-    /* --- Matrix Calculation using Single Thread --- */
-    double runtime = single_thread_multiplication(A, B, C, n);
+    runtime = single_thread_multiplication(A, B, C, n);
     printf("TIme (Single Thread):%f\n", runtime);
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            printf("%d ", C[i][j]);
+        }
+        printf("\n");
+    }
 
     for (int i = 0; i < n; ++i) {
         free(A[i]);
@@ -69,7 +51,7 @@ int main() {
 }
 
 
-BlockCoordinates block_assignment(int k, int p) {
+BlockCoordinates get_block(int k, int p) {
     BlockCoordinates block;
 
     block.x = (int) floor(k / sqrt(p));
@@ -79,24 +61,16 @@ BlockCoordinates block_assignment(int k, int p) {
 }
 
 
-void* cell_multiplication(void* arg) {
-    Arguments *args = (Arguments*) arg;
+Bound get_bound(int coord, int n, int p) {
+    Bound bound;
 
-    const int **A = (const int**) args->A;
-    const int **B = (const int**) args->B;
-    int **C = (int**) args->C;
-    const int p = args->p;
-    const int k = args->k;
+    bound.lower = (int) (coord * n / sqrt(p));
+    bound.upper = ((int) ((coord + 1) * n / sqrt(p))) - 1;
 
-    printf("Thread %d is working\n", k);
-
-    BlockCoordinates block = block_assignment(k, p);
-
-    printf("%d * %d = %d\n", A[block.x][block.y], B[block.x][block.y], A[block.x][block.y] * B[block.x][block.y]);
-    C[block.x][block.y] = A[block.x][block.y] * B[block.x][block.y];
-
-    return 0;
+    return bound;
 }
+
+
 
 double single_thread_multiplication(int **A, int **B, int **C, int n) {
     double start = 0, end = 0;
@@ -104,10 +78,82 @@ double single_thread_multiplication(int **A, int **B, int **C, int n) {
     GET_TIME(start)
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            assert(C[i][j] == A[i][j] * B[i][j]);
+            int check = 0;
+            for (int k = 0; k < n; ++k) {
+                check += A[i][k] * B[k][j];
+            }
+            C[i][j] = check;
         }
     }
     GET_TIME(end)
 
     return end - start;
 }
+
+
+double multi_thread_multiplication(int **A, int **B, int **C, int n, int p) {
+    pthread_t threads[p];
+
+    int status = 0;
+
+    double start = 0, end = 0;
+    GET_TIME(start)
+
+    for (int i = 0; i < p; ++i) {
+        Arguments *args = malloc(sizeof(Arguments));
+        args->A = A;
+        args->B = B;
+        args->C = C;
+        args->k = i;
+        args->n = n;
+        args->p = p;
+        status = pthread_create(&threads[i], NULL, block_calculation, args);
+        if (status != 0) {
+            exit(1);
+        }
+    }
+
+    for (int i = 0; i < p; ++i) {
+        status = pthread_join(threads[i], NULL);
+        if (status != 0) {
+            exit(1);
+        }
+    }
+
+    GET_TIME(end)
+
+    return end - start;
+}
+
+
+void* block_calculation(void* arg) {
+    Arguments *args = (Arguments*) arg;
+
+    const int **A = (const int**) args->A;
+    const int **B = (const int**) args->B;
+    int **C = (int**) args->C;
+
+    const int k = args->k, n = args->n, p = args->p;
+
+    BlockCoordinates block = get_block(k, p);
+
+    Bound i_bound = get_bound(block.x, n, p);
+    Bound j_bound = get_bound(block.y, n, p);
+
+    calculate_cells(A, B, C, i_bound, j_bound, k);
+
+    return 0;
+}
+
+
+void calculate_cells(const int** A, const int** B, int** C, Bound i_bound, Bound j_bound, int n) {
+    for (int i = i_bound.lower; i <= i_bound.upper; ++i) {
+        for (int j = j_bound.lower; j <= j_bound.upper; ++j) {
+            for (int k = 0; k < n; ++k) {
+                C[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+}
+
+
