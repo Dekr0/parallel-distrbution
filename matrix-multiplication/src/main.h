@@ -63,13 +63,16 @@ double single_thread_multiplication(int **A, int **B, int **C, int n);
 double multi_thread_multiplication(int **A, int **B, int **C, int n, int p);
 
 
-void calculate_cells(const int** A, const int** B, int** C, Bound i_bound, Bound j_bound, int k);
+double serial_multi_thread_implementation(int **A, int **B, int **C, int n, int p);
+
+
+int validate_thread_number(int p, int n);
+
+
+void calculate_cells(int** A, int** B, int** C, Bound i_bound, Bound j_bound, int k);
 
 
 void* block_calculation(void * arg);
-
-
-
 
 
 #endif //MATRIX_MULTIPLICATION_MAIN_H

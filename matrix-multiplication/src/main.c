@@ -2,14 +2,14 @@
 
 
 int main(int argc, char* argv[]) {
-    if (argc != 2)
+    if (argc != 3)
         return 1;
 
     // Dimension of the matrix;
     // number of thread is given by users input, a square number and factor of n^2
     int n = 0, p = (int) strtol(argv[1], NULL, 10);
 
-    if (n * n % p != 0 && sqrt(p)22)
+    char *mode = argv[2];
 
     // Pointer to matrix A, matrix B, and matrix C
     int **A, **B, **C;
@@ -17,6 +17,10 @@ int main(int argc, char* argv[]) {
     // Read the matrix A and matrix B from the input file
     int status = Lab1_loadinput(&A, &B, &n);
     if (status != 0) {
+        return 1;
+    }
+
+    if (validate_thread_number(p, n) != 0) {
         return 1;
     }
 
@@ -29,19 +33,16 @@ int main(int argc, char* argv[]) {
     }
 
     double runtime = 0;
-
-//    runtime = multi_thread_multiplication(A, B, C, n, p);
-//    printf("Time (Multi threading): %f\n", runtime);
-
-    runtime = single_thread_multiplication(A, B, C, n);
-    printf("TIme (Single Thread):%f\n", runtime);
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            printf("%d ", C[i][j]);
-        }
-        printf("\n");
+    if (strcmp(mode, "s") == 0) {
+//        runtime = serial_multi_thread_implementation(A, B, C, n, p);
+        runtime = single_thread_multiplication(A, B, C, n);
+    } else if (strcmp(mode, "p") == 0) {
+        runtime = multi_thread_multiplication(A, B, C, n, p);
+    } else {
+        return 1;
     }
+
+    Lab1_saveoutput(C, &n, runtime);
 
     for (int i = 0; i < n; ++i) {
         free(A[i]);
@@ -70,6 +71,18 @@ Bound get_bound(int coord, int n, int p) {
     return bound;
 }
 
+
+int validate_thread_number(int p, int n) {
+    if (p <= 0)
+        return 1;
+
+    int sqrt_p = (int) sqrt(p);
+
+    if (sqrt_p * sqrt_p != p || (n * n) % p != 0)
+        return 1;
+
+    return 0;
+}
 
 
 double single_thread_multiplication(int **A, int **B, int **C, int n) {
@@ -126,11 +139,30 @@ double multi_thread_multiplication(int **A, int **B, int **C, int n, int p) {
 }
 
 
+double serial_multi_thread_implementation(int **A, int **B, int **C, int n, int p) {
+    double start = 0, end = 0;
+
+    GET_TIME(start)
+    for (int k = 0; k < p; k++) {
+        BlockCoordinates block = get_block(k, p);
+        Bound i_bound = get_bound(block.x, n, p);
+        Bound j_bound = get_bound(block.y, n, p);
+
+        calculate_cells(A, B, C, i_bound, j_bound, n);
+    }
+
+
+    GET_TIME(end)
+
+    return end - start;
+}
+
+
 void* block_calculation(void* arg) {
     Arguments *args = (Arguments*) arg;
 
-    const int **A = (const int**) args->A;
-    const int **B = (const int**) args->B;
+    int **A = (int**) args->A;
+    int **B = (int**) args->B;
     int **C = (int**) args->C;
 
     const int k = args->k, n = args->n, p = args->p;
@@ -140,13 +172,13 @@ void* block_calculation(void* arg) {
     Bound i_bound = get_bound(block.x, n, p);
     Bound j_bound = get_bound(block.y, n, p);
 
-    calculate_cells(A, B, C, i_bound, j_bound, k);
+    calculate_cells(A, B, C, i_bound, j_bound, n);
 
     return 0;
 }
 
 
-void calculate_cells(const int** A, const int** B, int** C, Bound i_bound, Bound j_bound, int n) {
+void calculate_cells(int** A, int** B, int** C, Bound i_bound, Bound j_bound, int n) {
     for (int i = i_bound.lower; i <= i_bound.upper; ++i) {
         for (int j = j_bound.lower; j <= j_bound.upper; ++j) {
             for (int k = 0; k < n; ++k) {

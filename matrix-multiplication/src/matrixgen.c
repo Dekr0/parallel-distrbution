@@ -43,7 +43,7 @@ Example:
 
 int main (int argc, char* argv[])
 {
-    int size = 10, bound = 5;
+    int size = 1000, bound = 5;
     char* OUTPATH = "data_input";
     int b_print = 0;    //switch for the print
     int option;
