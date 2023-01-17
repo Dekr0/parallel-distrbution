@@ -2,17 +2,16 @@
 
 
 int main(int argc, char* argv[]) {
-    if (argc != 3)
+    if (argc != 2)
         return 1;
 
     // Dimension of the matrix;
     // number of thread is given by users input, a square number and factor of n^2
     int n = 0, p = (int) strtol(argv[1], NULL, 10);
 
-    char *mode = argv[2];
-
     // Pointer to matrix A, matrix B, and matrix C
-    int **A, **B, **C;
+    // D matrix is for single thread result
+    int **A, **B, **C, **D;
 
     // Read the matrix A and matrix B from the input file
     int status = Lab1_loadinput(&A, &B, &n);
@@ -26,21 +25,23 @@ int main(int argc, char* argv[]) {
 
     // Allocate memory for resulting matrix
     C = malloc(n * sizeof(int*));
+    D = malloc(n * sizeof(int*));
     for (int i = 0; i < n; i++) {
         C[i] = malloc(n * sizeof(int));
+        D[i] = malloc(n * sizeof(int));
 
         memset(C[i], 0, n * sizeof(int));
+        memset(D[i], 0, n * sizeof(int));
     }
 
     double runtime = 0;
-    if (strcmp(mode, "s") == 0) {
-//        runtime = serial_multi_thread_implementation(A, B, C, n, p);
-        runtime = single_thread_multiplication(A, B, C, n);
-    } else if (strcmp(mode, "p") == 0) {
-        runtime = multi_thread_multiplication(A, B, C, n, p);
-    } else {
-        return 1;
-    }
+    runtime = single_thread_multiplication(A, B, D, n);
+
+    printf("Single thread multiplication takes %f seconds.\n", runtime);
+
+    runtime = multi_thread_multiplication(A, B, C, n, p);
+
+    printf("Multi thread multiplication takes %f seconds.\n", runtime);
 
     Lab1_saveoutput(C, &n, runtime);
 
