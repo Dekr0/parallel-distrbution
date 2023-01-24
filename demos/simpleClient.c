@@ -9,25 +9,38 @@
 int main(int argc, char* argv[])
 {
     struct sockaddr_in sock_var;
-    int clientFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
-    char str_clnt[20],str_ser[20];
 
-    sock_var.sin_addr.s_addr=inet_addr("127.0.0.1");
-    sock_var.sin_port=3000;
-    sock_var.sin_family=AF_INET;
+    FILE *fp = fopen("input.txt", "r");
 
-    if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0)
-    {
+    int clientFileDescriptor = socket(AF_INET,SOCK_STREAM,0);
+    
+    // str_clnt is the string to be sent to server
+    // str_ser is the string echoed back from server
+    char str_clnt[20], str_ser[20];
+
+    sock_var.sin_addr.s_addr = inet_addr("127.0.0.1");
+    sock_var.sin_port = 3000;
+    sock_var.sin_family = AF_INET;
+
+    if(connect(clientFileDescriptor,(struct sockaddr*)&sock_var,sizeof(sock_var))>=0) {
         printf("Connected to server %d\n",clientFileDescriptor);
-        printf("Enter Srting to send\n");
-        scanf("%s",str_clnt);
-        write(clientFileDescriptor,str_clnt,20);
-        read(clientFileDescriptor,str_ser,20);
-        printf("String from Server: %s\n",str_ser);
+    
+        // scanf("%s",str_clnt);
+
+        while (fgets(str_clnt, 20, fp) != NULL) {
+            // Send the string to server
+            write(clientFileDescriptor, str_clnt, 20);
+
+            // Read the string echoed back from server
+            read(clientFileDescriptor, str_ser, 20);
+
+            printf("String from Server: %s\n", str_ser);
+        }
+
         close(clientFileDescriptor);
-    }
-    else{
+    } else {
         printf("socket creation failed");
     }
+
     return 0;
 }
