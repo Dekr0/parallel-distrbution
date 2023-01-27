@@ -1,8 +1,6 @@
 #include "main1.h"
 
 
-char **sharedArray;
-
 pthread_mutex_t mutex;
 
 
@@ -13,68 +11,62 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    int serverFD = setupServer(
-            (int) strtol(argv[1], NULL, 10),
-            argv[2],
-            (int) strtol(argv[3], NULL, 10),
-            &sharedArray);
+    int client;
+    int i;
 
-    int counter = 0;
-
-    double start = 0, finish = 0, elapsed = 0;
-
-    pthread_t *threads = (pthread_t *) malloc(COM_NUM_REQUEST * sizeof(pthread_t));
+    int server = setup(argv);
+    if (server < 0) {
+        exit(1);
+    }
 
     pthread_mutex_init(&mutex, NULL);
 
-    while (1) {
-        for (int i = 0; i < COM_NUM_REQUEST; i++) {
-            int clientFD = accept(serverFD, NULL, NULL);
-            printf("Connected to client %d\n",clientFD);
-            pthread_create(&threads[i], NULL, handle, (void *) &clientFD);
+    while (!terminate) {
+        for(i = 0; i < COM_NUM_REQUEST; i++) {
+            client = accept(server, NULL, NULL);
 
-            counter++;
-            printf("Counter: %d\n", counter);
+            pthread_create(&threads[i],
+                           NULL,
+                           handle,
+                           (void *) (long) client);
         }
     }
+
+    cleanup(server);
+
+    return 0;
 }
 
 
-void get(char *buffer, int pos) {
-    pthread_mutex_lock(&mutex);
+void * handle(void *args) {
+    int client = (int)(long) args;
 
-    getContent(buffer, pos, sharedArray);
+    char *receive = (char *) malloc(COM_BUFF_SIZE * sizeof(char));
+    char *send = (char *) malloc(COM_BUFF_SIZE * sizeof(char));
 
-    pthread_mutex_unlock(&mutex);
-}
+    ClientRequest *request = (ClientRequest *) malloc(sizeof(ClientRequest));
 
+    memset(receive, 0, COM_BUFF_SIZE);
+    memset(send, 0, COM_BUFF_SIZE);
+    memset(request, 0, sizeof(ClientRequest));
 
-void set(char *msg, char *updatedMsg,  int pos) {
-    pthread_mutex_lock(&mutex);
+    read(client, receive, COM_BUFF_SIZE);
 
-    setContent(msg, pos, sharedArray);
+    ParseMsg(receive, request);
 
-    strcpy(updatedMsg, sharedArray[pos]);
+    printf("Request: is_read=%d, pos=%d, msg=%s\n",
+           request->is_read,
+           request->pos,
+           request->msg);
 
-    pthread_mutex_unlock(&mutex);
-}
+    // testing the server is working
+    strcpy(send, "OK");
 
+    write(client, send, COM_BUFF_SIZE);
 
-// TODO: Need fixed
-void *handle(void *arg) {
-    int clientFD = *((int *) arg);
-    char buffer[COM_BUFF_SIZE];
+    free(receive);
+    free(send);
 
-    ClientRequest request = {};
-
-    read(clientFD, buffer, COM_BUFF_SIZE);
-
-    if (strlen(buffer) > 0 && ParseMsg(buffer, &request) != 0) {
-            printf("Failed to handle client %d", clientFD);
-    } else {
-        printf("Client %d, Is Read: %d, Position: %d\n", clientFD, request.is_read, request.pos);
-        write(clientFD, "Response", strlen("Response") + 1);
-    }
-
+    close(client);
     return NULL;
 }
