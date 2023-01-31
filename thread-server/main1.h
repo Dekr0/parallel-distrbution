@@ -3,7 +3,17 @@
 
 
 
-#include "server.h"
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#include "common.h"
 #include "timer.h"
 
 

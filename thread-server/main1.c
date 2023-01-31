@@ -1,7 +1,7 @@
 #include "main1.h"
 
-
 pthread_mutex_t mutex;
+char ** resources;
 
 
 int main(int argc, char *argv[]) {
@@ -11,19 +11,40 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    int client;
-    int i;
+    /* Create server socket */
+    struct sockaddr_in sockVar;
+    int server = socket(AF_INET, SOCK_STREAM, 0);
 
-    int server = setup(argv);
-    if (server < 0) {
+    sockVar.sin_addr.s_addr = inet_addr(argv[2]);
+    sockVar.sin_port = strtol(argv[3], NULL, 10);
+    sockVar.sin_family = AF_INET;
+
+    if (bind(server, (struct sockaddr*)&sockVar, sizeof(sockVar)) < 0) {
+        printf("Create socket failed");
         exit(1);
     }
+    /* */
+
+    pthread_t * threads;
+    threads = malloc(COM_NUM_REQUEST * sizeof(pthread_t));
+
+    /* Allocate memory for shared resources */
+    long arraySize = strtol(argv[1], NULL, 10);
+
+    resources = (char **) malloc(arraySize * sizeof(char *));
+    for (int i = 0; i < arraySize; i++) {
+        resources[i] = (char *) malloc(COM_BUFF_SIZE * sizeof(char));
+        sprintf(resources[i], "String %d: the initial value", i);
+        printf("%s\n", resources[i]);
+    }
+    /* */
 
     pthread_mutex_init(&mutex, NULL);
 
-    while (!terminate) {
-        for(i = 0; i < COM_NUM_REQUEST; i++) {
-            client = accept(server, NULL, NULL);
+    listen(server, COM_NUM_REQUEST);
+    while(1) {
+        for(int i = 0; i < COM_NUM_REQUEST; i++) {
+            int client = accept(server, NULL, NULL);
 
             pthread_create(&threads[i],
                            NULL,
@@ -31,8 +52,6 @@ int main(int argc, char *argv[]) {
                            (void *) (long) client);
         }
     }
-
-    cleanup(server);
 
     return 0;
 }

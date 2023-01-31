@@ -1,5 +1,5 @@
-#ifndef THREAD_SERVER_SERVER_H
-#define THREAD_SERVER_SERVER_H
+#ifndef THREAD_SERVER_SERVER_DEFECT_H
+#define THREAD_SERVER_SERVER_DEFECT_H
 
 
 #include <arpa/inet.h>
@@ -86,4 +86,4 @@ void cleanup(int server) {
 }
 
 
-#endif //THREAD_SERVER_SERVER_H
+#endif //THREAD_SERVER_SERVER_DEFECT_H
