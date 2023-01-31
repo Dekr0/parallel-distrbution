@@ -53,14 +53,18 @@ void * handle(void *args) {
     read(client, receive, COM_BUFF_SIZE);
 
     ParseMsg(receive, request);
-
-    printf("Request: is_read=%d, pos=%d, msg=%s\n",
-           request->is_read,
-           request->pos,
-           request->msg);
-
-    // testing the server is working
-    strcpy(send, "OK");
+    
+    if(request->is_read){
+        pthread_mutex_lock(&mutex);
+        getContent(send, request->pos, resources );
+        pthread_mutex_unlock(&mutex);
+    }
+    else{
+        pthread_mutex_lock(&mutex);
+        setContent(request->msg, request->pos, resources);
+        getContent(send, request->pos, resources );
+        pthread_mutex_unlock(&mutex);
+    }
 
     write(client, send, COM_BUFF_SIZE);
 
