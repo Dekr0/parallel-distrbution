@@ -67,9 +67,14 @@ int setup(char * addr, long arraySize, long ip) {
     /* */
 
     /* Allocate memory for shared resources */
-    resources = (char **) malloc(arraySize * sizeof(char *));
-    for (int i = 0; i < arraySize; i++) {
-        resources[i] = (char *) malloc(COM_BUFF_SIZE * sizeof(char));
+    resources = malloc(arraySize * sizeof(char *));
+
+    resources[0] = malloc(COM_BUFF_SIZE * sizeof(char));
+    sprintf(resources[0], "String %d: the initial value", 0);
+    printf("%s\n", resources[0]);
+
+    for (int i = 1; i < arraySize; i++) {
+        resources[i] = malloc(COM_BUFF_SIZE * sizeof(char));
         sprintf(resources[i], "String %d: the initial value", i);
         printf("%s\n", resources[i]);
     }
@@ -82,16 +87,18 @@ int setup(char * addr, long arraySize, long ip) {
 void * handle(void *args) {
     int client = (int)(long) args;
 
-    char *receive = (char *) malloc(COM_BUFF_SIZE * sizeof(char));
-    char *send = (char *) malloc(COM_BUFF_SIZE * sizeof(char));
+    char *receive = malloc(COM_BUFF_SIZE * sizeof(char));
+    char *send = malloc(COM_BUFF_SIZE * sizeof(char));
 
-    ClientRequest *request = (ClientRequest *) malloc(sizeof(ClientRequest));
+    ClientRequest *request = malloc(sizeof(ClientRequest));
 
     memset(receive, 0, COM_BUFF_SIZE);
     memset(send, 0, COM_BUFF_SIZE);
     memset(request, 0, sizeof(ClientRequest));
 
     read(client, receive, COM_BUFF_SIZE);
+
+    printf("%s\n", receive);
 
     ParseMsg(receive, request);
     
