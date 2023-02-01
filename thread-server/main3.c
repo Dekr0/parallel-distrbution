@@ -30,7 +30,7 @@ int main(int argc, char * argv[]) {
     pthread_t * threads;
     threads = malloc(COM_NUM_REQUEST * sizeof(pthread_t));
 
-    pthread_mutex_init(&mutex, NULL);
+    initReadWriteLock(&readWriteLock);
 
     while (1) {
         for(int i = 0; i < COM_NUM_REQUEST; i++) {
