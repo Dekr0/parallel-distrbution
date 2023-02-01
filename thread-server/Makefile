@@ -1,7 +1,22 @@
+ip = 127.0.0.1
+port = 8003
+opts = -lpthread -lm -std=gnu11 -Wall
+size = 100
+
+
 main:
-	gcc -g main1.c -o main1 -pthread
-	gcc -g main2.c -o main2 -pthread
+	gcc -g main1.c -o main1 $(opts)
+	gcc -g main2.c -o main2 $(opts)
+	gcc -g main4.c -o main4 $(opts)
 attacker:
-	gcc -g attacker.c -o attacker -pthread -lm
+	gcc -g attacker.c -o attacker $(opts) 
 client:
-	gcc -g clientl.c -o client -pthread -lm
+	gcc -g clientl.c -o client $(opts) 
+run1:
+	./main1 $(size) $(ip) $(port)
+run2:
+	./main2 $(size) $(ip) $(port)
+run4:
+	./main4 $(size) $(ip) $(port)
+attack:
+	./attacker $(size) $(ip) $(port)
