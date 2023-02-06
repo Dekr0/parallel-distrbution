@@ -25,3 +25,5 @@ attack:
 	./attacker $(size) $(ip) $(port)
 test:
 	bash test.sh $(size) $(ip) $(port)
+clean:
+	rm main1 main2 main3 main4
