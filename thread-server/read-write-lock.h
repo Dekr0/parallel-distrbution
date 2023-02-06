@@ -8,9 +8,9 @@
 
 
 typedef struct {
-    int numPendingWriters;
-    int numReaders;
-    int writer;
+    int numPendingWriters; // pending_writers
+    int numReaders; // readers
+    int writer; // writer
     pthread_cond_t readersProceed;
     pthread_cond_t writerProceed;
     pthread_mutex_t readWriteLock;
@@ -35,7 +35,7 @@ void initReadWriteLock(ReadWriteLock * lock) {
 void readLock(ReadWriteLock * lock) {
     pthread_mutex_lock(&(lock -> readWriteLock));
 
-    while (lock -> numPendingWriters > 0 || lock -> writer > 0) {
+    while ((lock -> numPendingWriters > 0) || (lock -> writer > 0)) {
         pthread_cond_wait(&(lock -> readersProceed), &(lock -> readWriteLock));
     }
 
@@ -52,7 +52,7 @@ void readLock(ReadWriteLock * lock) {
 void writeLock(ReadWriteLock * lock) {
     pthread_mutex_lock(&(lock -> readWriteLock));
 
-    while (lock -> writer > 0 || lock -> numReaders > 0) {
+    while ((lock -> writer > 0) || (lock -> numReaders > 0)) {
         lock -> numPendingWriters ++;
 
         pthread_cond_wait(&(lock -> writerProceed), &(lock -> readWriteLock));
@@ -83,12 +83,13 @@ void unlockReadWriteLock(ReadWriteLock * lock) {
 
     pthread_mutex_unlock(&(lock -> readWriteLock));
 
-    if (lock -> numReaders == 0 && lock -> numPendingWriters > 0) {
+    if ((lock -> numReaders == 0) && (lock -> numPendingWriters > 0)) {
         pthread_cond_signal(&(lock -> writerProceed));
     } else if (lock -> numReaders > 0) {
         pthread_cond_broadcast(&(lock -> readersProceed));
     }
-}
 
+    printf("Unlock\n");
+}
 
 #endif

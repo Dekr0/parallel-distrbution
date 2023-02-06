@@ -32,19 +32,32 @@ int main(int argc, char* argv[]) {
     pthread_t * threads;
     threads = malloc(COM_NUM_REQUEST * sizeof(pthread_t));
 
-    pthread_mutex_init(&mutex, NULL);
     initReadWriteLock(&readWriteLock);
 
     while (1) {
         for (int i = 0; i < COM_NUM_REQUEST; i++) {
-            int clientFD = accept(serverFD, NULL, NULL);
+            int client = accept(serverFD, NULL, NULL);
+            if (client < 0) {
+                printf("Error %d on accepting incoming client\n", client);
+            } else {
+                int code = pthread_create(&threads[i],
+                                          NULL,
+                                          handle,
+                                          (void *) (long) client);
+                if (code != 0) {
+                    printf("Error %d on creating a new thread for client %d\n", code, client);
+                }
+            }
+        }
 
-            pthread_create(
-                    &threads[i],
-                    NULL,
-                    handle,
-                    (void *)(long) clientFD
-            );
+        printf("Finish accept all %d clients. Restarting...\n", COM_NUM_REQUEST);
+//        sleep(2);
+
+        for (int i = 0; i < COM_NUM_REQUEST; i++) {
+            int code = pthread_join(threads[i], NULL);
+            if (code != 0) {
+                printf("Error %d on closing thread %d\n", code, i);
+            }
         }
     }
 
@@ -53,44 +66,51 @@ int main(int argc, char* argv[]) {
 
 
 void * handle(void * args) {
-    int clientFD = (int)(long) args;
+    int client = (int)(long) args;
 
     char * received = malloc(COM_BUFF_SIZE * sizeof(char));
-    char * response = malloc(COM_BUFF_SIZE * sizeof(char));
+    char * send = malloc(COM_BUFF_SIZE * sizeof(char));
+
+    ClientRequest * request = malloc(sizeof(ClientRequest));
 
     memset(received, 0, COM_BUFF_SIZE);
-    memset(response, 0, COM_BUFF_SIZE);
+    memset(send, 0, COM_BUFF_SIZE);
+    memset(request, 0, sizeof(ClientRequest));
 
-    ClientRequest * r = malloc(sizeof(ClientRequest));
+    read(client, received, COM_BUFF_SIZE);
 
-    memset(r, 0, sizeof(ClientRequest));
-
-    read(clientFD, received, COM_BUFF_SIZE);
-
-    ParseMsg(received, r);
+    ParseMsg(received, request);
 
     // TODO: deadlock issue
     // TODO: Convert this to an array of ReadWriteLock
 
+
     /* Critical Section */
-    if (r->is_read) {
+    if (request->is_read) {
         readLock(&readWriteLock);
-        getContent(response, r->pos, resources);
+        printf("Client %d acquired read\n", client);
+
+        getContent(send, request->pos, resources);
+
+        printf("Client %d tries to unlock\n", client);
         unlockReadWriteLock(&readWriteLock);
     } else {
         writeLock(&readWriteLock);
-        setContent(r->msg, r->pos, resources);
-        getContent(response, r->pos, resources);
+        printf("Client %d acquired write\n", client);
+
+        setContent(request->msg, request->pos, resources);
+        getContent(send, request->pos, resources);
+
+        printf("Client %d tries to unlock\n", client);
         unlockReadWriteLock(&readWriteLock);
     }
     /* ---------------- */
 
-    write(clientFD, response, COM_BUFF_SIZE);
+    write(client, send, COM_BUFF_SIZE);
 
     free(received);
-    free(response);
+    free(send);
 
-    close(clientFD);
-
-    return 0;
+    close(client);
+    return NULL;
 }
