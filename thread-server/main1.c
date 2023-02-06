@@ -32,13 +32,29 @@ int main(int argc, char *argv[]) {
     pthread_mutex_init(&mutex, NULL);
 
     while (1) {
-        for(int i = 0; i < COM_NUM_REQUEST; i++) {
+        for (int i = 0; i < COM_NUM_REQUEST; i++) {
             int client = accept(serverFD, NULL, NULL);
+            if (client < 0) {
+                printf("Error %d on accepting incoming client\n", client);
+            } else {
+                int code = pthread_create(&threads[i],
+                                          NULL,
+                                          handle,
+                                          (void *) (long) client);
+                if (code != 0) {
+                    printf("Error %d on creating a new thread for client %d\n", code, client);
+                }
+            }
+        }
 
-            pthread_create(&threads[i],
-                           NULL,
-                           handle,
-                           (void *) (long) client);
+        printf("Finish accept all %d clients. Restarting...\n", COM_NUM_REQUEST);
+        sleep(2);
+
+        for (int i = 0; i < COM_NUM_REQUEST; i++) {
+            int code = pthread_join(threads[i], NULL);
+            if (code != 0) {
+                printf("Error %d on closing thread %d\n", code, i);
+            }
         }
     }
 
@@ -59,8 +75,6 @@ void * handle(void *args) {
     memset(request, 0, sizeof(ClientRequest));
 
     read(client, receive, COM_BUFF_SIZE);
-
-    printf("%s\n", receive);
 
     ParseMsg(receive, request);
     
