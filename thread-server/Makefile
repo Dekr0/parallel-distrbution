@@ -23,3 +23,5 @@ run4:
 	./main4 $(size) $(ip) $(port)
 attack:
 	./attacker $(size) $(ip) $(port)
+test:
+	bash test.sh $(size) $(ip) $(port)
