@@ -7,6 +7,7 @@ add_executable(attacker attacker.c)
 add_executable(client client.c)
 add_executable(main1 main1.c)
 add_executable(main2 main2.c)
+add_executable(main4 main4.c)
 
 target_link_libraries(attacker m)
 target_link_libraries(client m)
