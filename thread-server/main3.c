@@ -23,8 +23,6 @@ int main(int argc, char * argv[]) {
         resources[i] = malloc(COM_BUFF_SIZE * sizeof(char));
 
         sprintf(resources[i], "String %d: the initial value", i);
-
-        printf("%s\n", resources[i]);
     }
 
     pthread_t * threads;
