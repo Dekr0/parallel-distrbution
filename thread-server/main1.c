@@ -2,6 +2,7 @@
 
 
 pthread_mutex_t mutex;
+
 char ** resources;
 double * latencies;
 
@@ -58,9 +59,6 @@ int main(int argc, char *argv[]) {
             }
         }
 
-//        printf("Finish accept all %d clients. Restarting...\n", COM_NUM_REQUEST);
-//        sleep(2);
-
         for (int i = 0; i < COM_NUM_REQUEST; i++) {
             int code = pthread_join(threads[i], NULL);
             if (code != 0) {
@@ -76,6 +74,8 @@ int main(int argc, char *argv[]) {
 
 
 void * handle(void *args) {
+    double start = 0.0, end = 0.0;
+
     Data * data = (Data *) args;
 
     int client = (int) data -> client;
@@ -94,20 +94,20 @@ void * handle(void *args) {
 
     ParseMsg(receive, request);
 
-    double start = 0.0, end = 0.0;
-
-    GET_TIME(start);
-    if(request->is_read){
+    if (request->is_read) {
+        GET_TIME(start);
         pthread_mutex_lock(&mutex);
         getContent(send, request->pos, resources );
+        GET_TIME(end);
         pthread_mutex_unlock(&mutex);
-    } else{
+    } else {
+        GET_TIME(start);
         pthread_mutex_lock(&mutex);
         setContent(request->msg, request->pos, resources);
         getContent(send, request->pos, resources );
+        GET_TIME(end);
         pthread_mutex_unlock(&mutex);
     }
-    GET_TIME(end);
 
     latencies[requestId] = end - start;
 

@@ -1,12 +1,10 @@
-
 #include "server.h"
-#include "pthread.h"
 
 
-pthread_mutex_t mutex;
 pthread_rwlock_t *readWriteLocks;
 
 char ** resources;
+double * latencies;
 
 
 int main(int argc, char* argv[]) {
@@ -29,29 +27,41 @@ int main(int argc, char* argv[]) {
 
     }
 
+    latencies = malloc(COM_NUM_REQUEST * sizeof(double));
+
     pthread_t * threads;
     threads = malloc(COM_NUM_REQUEST * sizeof(pthread_t));
+
     readWriteLocks = malloc(size * sizeof(pthread_rwlock_t));
     for(int i = 0; i < size; i++){
         pthread_rwlock_init(&readWriteLocks[i], NULL);
     }
+
     while (1) {
+        memset(latencies, 0, COM_NUM_REQUEST);
+
         for (int i = 0; i < COM_NUM_REQUEST; i++) {
             int client = accept(serverFD, NULL, NULL);
             if (client < 0) {
                 printf("Error %d on accepting incoming client\n", client);
             } else {
-                int code = pthread_create(&threads[i],
-                                          NULL,
-                                          handle,
-                                          (void *) (long) client);
+                Data * data = malloc(sizeof(Data));
+
+                data -> client = (long) client;
+                data -> requestId = i;
+
+                int code = pthread_create(
+                        &threads[i],
+                        NULL,
+                        handle,
+                        (void *) data
+                );
+
                 if (code != 0) {
                     printf("Error %d on creating a new thread for client %d\n", code, client);
                 }
             }
         }
-
-//        sleep(2);
 
         for (int i = 0; i < COM_NUM_REQUEST; i++) {
             int code = pthread_join(threads[i], NULL);
@@ -59,6 +69,9 @@ int main(int argc, char* argv[]) {
                 printf("Error %d on closing thread %d\n", code, i);
             }
         }
+
+        saveTimes(latencies, COM_NUM_REQUEST);
+
     }
 
     return 0;
@@ -66,43 +79,55 @@ int main(int argc, char* argv[]) {
 
 
 void * handle(void * args) {
-    int client = (int)(long) args;
+    Data * data = (Data *) args;
 
-    char * received = malloc(COM_BUFF_SIZE * sizeof(char));
+    double start = 0.0, end = 0.0;
+
+    int client = (int) data -> client;
+    int requestId = data -> requestId;
+
+    char * receive = malloc(COM_BUFF_SIZE * sizeof(char));
     char * send = malloc(COM_BUFF_SIZE * sizeof(char));
 
     ClientRequest * request = malloc(sizeof(ClientRequest));
 
-    memset(received, 0, COM_BUFF_SIZE);
+    memset(receive, 0, COM_BUFF_SIZE);
     memset(send, 0, COM_BUFF_SIZE);
     memset(request, 0, sizeof(ClientRequest));
 
-    read(client, received, COM_BUFF_SIZE);
+    read(client, receive, COM_BUFF_SIZE);
 
-    ParseMsg(received, request);
+    ParseMsg(receive, request);
 
-    // TODO: deadlock issue
-    // TODO: Convert this to an array of ReadWriteLock
     int positionToLookFor = request->pos;
 
     /* Critical Section */
     if (request->is_read) {
+        GET_TIME(start);
         pthread_rwlock_rdlock(&readWriteLocks[positionToLookFor]);
         getContent(send, request->pos, resources);
+        GET_TIME(end);
         pthread_rwlock_unlock(&readWriteLocks[positionToLookFor]);
     } else {
+        GET_TIME(start);
         pthread_rwlock_wrlock(&readWriteLocks[positionToLookFor]);
         setContent(request->msg, request->pos, resources);
         getContent(send, request->pos, resources);
+        GET_TIME(end);
         pthread_rwlock_unlock(&readWriteLocks[positionToLookFor]);
     }
     /* ---------------- */
 
+    latencies[requestId] = end - start;
+
     write(client, send, COM_BUFF_SIZE);
 
-    free(received);
+    free(receive);
     free(send);
+    free(request);
+    free(data);
 
     close(client);
+
     return NULL;
 }
