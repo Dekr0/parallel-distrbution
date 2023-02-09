@@ -1,9 +1,10 @@
-#include "read-write-lock.h"
+
 #include "server.h"
+#include "pthread.h"
 
 
 pthread_mutex_t mutex;
-ReadWriteLock readWriteLock;
+pthread_rwlock_t *readWriteLocks;
 
 char ** resources;
 
@@ -26,14 +27,14 @@ int main(int argc, char* argv[]) {
 
         sprintf(resources[i], "String %d: the initial value", i);
 
-        printf("%s\n", resources[i]);
     }
 
     pthread_t * threads;
     threads = malloc(COM_NUM_REQUEST * sizeof(pthread_t));
-
-    initReadWriteLock(&readWriteLock);
-
+    readWriteLocks = malloc(size * sizeof(pthread_rwlock_t));
+    for(int i = 0; i < size; i++){
+        pthread_rwlock_init(&readWriteLocks[i], NULL);
+    }
     while (1) {
         for (int i = 0; i < COM_NUM_REQUEST; i++) {
             int client = accept(serverFD, NULL, NULL);
@@ -50,7 +51,6 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        printf("Finish accept all %d clients. Restarting...\n", COM_NUM_REQUEST);
 //        sleep(2);
 
         for (int i = 0; i < COM_NUM_REQUEST; i++) {
@@ -83,26 +83,18 @@ void * handle(void * args) {
 
     // TODO: deadlock issue
     // TODO: Convert this to an array of ReadWriteLock
-
+    int positionToLookFor = request->pos;
 
     /* Critical Section */
     if (request->is_read) {
-        readLock(&readWriteLock);
-        printf("Client %d acquired read\n", client);
-
+        pthread_rwlock_rdlock(&readWriteLocks[positionToLookFor]);
         getContent(send, request->pos, resources);
-
-        printf("Client %d tries to unlock\n", client);
-        unlockReadWriteLock(&readWriteLock);
+        pthread_rwlock_unlock(&readWriteLocks[positionToLookFor]);
     } else {
-        writeLock(&readWriteLock);
-        printf("Client %d acquired write\n", client);
-
+        pthread_rwlock_wrlock(&readWriteLocks[positionToLookFor]);
         setContent(request->msg, request->pos, resources);
         getContent(send, request->pos, resources);
-
-        printf("Client %d tries to unlock\n", client);
-        unlockReadWriteLock(&readWriteLock);
+        pthread_rwlock_unlock(&readWriteLocks[positionToLookFor]);
     }
     /* ---------------- */
 

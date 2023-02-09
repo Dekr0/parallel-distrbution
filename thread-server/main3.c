@@ -1,8 +1,8 @@
-#include "read-write-lock.h"
 #include "server.h"
+#include "pthread.h"
 
 pthread_mutex_t mutex;
-ReadWriteLock readWriteLock;
+pthread_rwlock_t readWriteLock = PTHREAD_RWLOCK_INITIALIZER;
 
 char ** resources;
 
@@ -23,15 +23,12 @@ int main(int argc, char * argv[]) {
         resources[i] = malloc(COM_BUFF_SIZE * sizeof(char));
 
         sprintf(resources[i], "String %d: the initial value", i);
-
-        printf("%s\n", resources[i]);
     }
 
     pthread_t * threads;
     threads = malloc(COM_NUM_REQUEST * sizeof(pthread_t));
 
-    initReadWriteLock(&readWriteLock);
-
+    //initReadWriteLock(&readWriteLock);
     while (1) {
         for(int i = 0; i < COM_NUM_REQUEST; i++) {
             int client = accept(serverFD, NULL, NULL);
@@ -42,6 +39,13 @@ int main(int argc, char * argv[]) {
                            (void *) (long) client);
         }
     }
+
+    for (int i = 0; i < COM_NUM_REQUEST; i++) {
+            int code = pthread_join(threads[i], NULL);
+            if (code != 0) {
+                printf("Error %d on closing thread %d\n", code, i);
+            }
+        }
 
     return 0;
 }
@@ -65,14 +69,14 @@ void * handle(void *args) {
     ParseMsg(receive, request);
     
     if(request->is_read){
-        readLock(&readWriteLock);
+        pthread_rwlock_rdlock(&readWriteLock);
         getContent(send, request->pos, resources );
-        unlockReadWriteLock(&readWriteLock);
+        pthread_rwlock_unlock(&readWriteLock);
     } else{
-        writeLock(&readWriteLock);
+        pthread_rwlock_wrlock(&readWriteLock);
         setContent(request->msg, request->pos, resources);
         getContent(send, request->pos, resources );
-        unlockReadWriteLock(&readWriteLock);
+        pthread_rwlock_unlock(&readWriteLock);
     }
 
     write(client, send, COM_BUFF_SIZE);
