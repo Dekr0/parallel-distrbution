@@ -12,6 +12,13 @@
 #include <pthread.h>
 
 #include "common.h"
+#include "timer.h"
+
+
+typedef struct {
+    long client;
+    int requestId;
+} Data;
 
 
 int setup(char * address, long ip) {

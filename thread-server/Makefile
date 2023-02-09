@@ -1,5 +1,5 @@
 ip = 127.0.0.1
-port = 8000
+port = 8002
 opts = -lpthread -lm -std=gnu11 -Wall
 size = 100
 
