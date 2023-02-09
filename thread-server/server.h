@@ -36,7 +36,7 @@ int setup(char * address, long ip) {
         exit(1);
     }
 
-    listen(fd, COM_BUFF_SIZE);
+    listen(fd, COM_NUM_REQUEST);
     printf("Server listening on port %ld\n", ip);
 
     return fd;
