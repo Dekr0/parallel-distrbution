@@ -13,13 +13,13 @@ attacker:
 	gcc -g attacker.c -o attacker $(opts) 
 client:
 	gcc -g clientl.c -o client $(opts) 
-run1:
+main1:
 	./main1 $(size) $(ip) $(port)
-run2:
+main2:
 	./main2 $(size) $(ip) $(port)
-run3:
+main3:
 	./main3 $(size) $(ip) $(port)
-run4:
+main4:
 	./main4 $(size) $(ip) $(port)
 attack:
 	./attacker $(size) $(ip) $(port)
