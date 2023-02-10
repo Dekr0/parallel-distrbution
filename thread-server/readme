@@ -1,0 +1,4 @@
+main1 : single mutex protection scheme
+main2 : 1 mutex for each string in the shared Array protection scheme
+main3 : single read write lock protection scheme
+main4 : 1 read write lock for each string in the shared Array protection scheme
