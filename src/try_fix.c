@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Lab3IO.h"
-#include "timer.h"
+#include "../Code/Lab3IO.h"
+#include "../Code/timer.h"
 
 
 int main () {

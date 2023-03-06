@@ -1,7 +1,7 @@
 opts = -fopenmp -lm
 size = 1000
 
-main: ../Code/main.c Lab3IO.c Lab3IO.h timer.h
+main: main_index_map.c Lab3IO.c Lab3IO.h timer.h
 	gcc main.c Lab3IO.c $(opts) -o main
 
 main_alt: main_no_index_map.c Lab3IO.c Lab3IO.h timer.h

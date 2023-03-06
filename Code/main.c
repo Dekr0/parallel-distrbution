@@ -1,87 +1,70 @@
 #include <math.h>
 #include <omp.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 
 #include "Lab3IO.h"
 #include "timer.h"
 
 
-int main(int argc, char * argv[]) {
-    int i;
-    int j;
-    int k;
-    int swap;
-    int swap_index;
-    int size;
-    int * index_map;
+int main() {
+    int i, j, k, size, swap_index;
 
-    double start,end;
-    double tmp;
-    double max;
+    double start,end, max, tmp;
+    double * swap = NULL;
     double * X;
     double ** Au;
-
-    long threads;
 
     Lab3LoadInput(&Au, &size);
 
     X = CreateVec(size);
 
-    index_map = malloc(size * sizeof(int));
-#pragma omp parallel for default(none) shared(size, index_map) private(i)
-    for (i = 0; i < size; i++) {
-        index_map[i] = i;
-    }
-
-    threads = strtol(argv[1], NULL, 10);
-
     GET_TIME(start);
-#pragma omp parallel num_threads(threads) default(none) shared(size, max, swap_index, index_map, Au) private(k, i, swap, tmp, j)
+#pragma omp parallel default(none) shared(size, max, swap_index, swap, Au) private(k, i, tmp, j)
     for (k = 0; k < size - 1; k++) {
         /* Pivoting */
-        max = 0;
-        swap_index = 0;
-
 #pragma omp single
         {
+            max = 0;
+            swap_index = 0;
+            swap = NULL;
+
             for (i = k; i < size; i++) {
-                if (max < fabs(Au[index_map[i]][k])) {
-                    max = fabs(Au[index_map[i]][k]);
+                if (max < fabs(Au[i][k])) {
+                    max = fabs(Au[i][k]);
                     swap_index = i;
                 }
             }
 
             if (swap_index != k) {
-                swap = index_map[swap_index];
-                index_map[swap_index] = index_map[k];
-                index_map[k] = swap;
+                swap = Au[k];
+                Au[k] = Au[swap_index];
+                Au[swap_index] = swap;
             }
         }
 
         /* Gaussian */
 #pragma omp for
         for (i = k + 1; i < size; i++) {
-            tmp = Au[index_map[i]][k] / Au[index_map[k]][k];
+            tmp = Au[i][k] / Au[k][k];
             for (j = k; j < size + 1; j++) {
-                Au[index_map[i]][j] -= Au[index_map[k]][j] * tmp;
+                Au[i][j] -= Au[k][j] * tmp;
             }
         }
-
     }
 
     for (k = size - 1; k > 0; k--) {
-#pragma omp parallel for num_threads(threads) default(none) shared(k, size, index_map, Au) private(i, tmp)
+#pragma omp parallel for default(none) shared(k, size, Au) private(i, tmp)
         for (i = k - 1; i >= 0; i--) {
-            tmp = Au[index_map[i]][k] / Au[index_map[k]][k];
-            Au[index_map[i]][k] -= tmp * Au[index_map[k]][k];
-            Au[index_map[i]][size] -= tmp * Au[index_map[k]][size];
+            tmp = Au[i][k] / Au[k][k];
+            Au[i][k] -= tmp * Au[k][k];
+            Au[i][size] -= tmp * Au[k][size];
         }
     }
 
-#pragma omp parallel for num_threads(threads) default(none) shared(size, X, index_map, Au) private(k)
+#pragma omp parallel for default(none) shared(size, X, Au) private(k)
     for (k = 0; k < size; k++) {
-        X[k] = Au[index_map[k]][size] / Au[index_map[k]][k];
+        X[k] = Au[k][size] / Au[k][k];
     }
 
     GET_TIME(end);
