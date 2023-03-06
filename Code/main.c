@@ -20,7 +20,7 @@ int main() {
     X = CreateVec(size);
 
     GET_TIME(start);
-#pragma omp parallel default(none) shared(size, max, swap_index, swap, Au) private(k, i, tmp, j)
+#pragma omp parallel default(none) shared(size, max, swap_index, Au) private(k, i, swap, tmp, j)
     for (k = 0; k < size - 1; k++) {
         /* Pivoting */
 #pragma omp single
@@ -68,6 +68,8 @@ int main() {
     }
 
     GET_TIME(end);
+
+    printf("%f\n", end - start);
 
     Lab3SaveOutput(X, size, end - start);
 
