@@ -1,7 +1,7 @@
 opts = -fopenmp -lm
 size = 1000
 
-main: main_direct_memory_swap.c Lab3IO.c Lab3IO.h timer.h
+main: main.c Lab3IO.c Lab3IO.h timer.h
 	gcc main.c Lab3IO.c $(opts) -o main
 
 gen: datagen.c Lab3IO.c Lab3IO.h
