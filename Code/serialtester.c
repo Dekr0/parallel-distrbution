@@ -60,7 +60,7 @@ int main(int argc, char* argv[]){
 				temp = Au[index[i]][k] / Au[index[k]][k];
 				for (j = k; j < size + 1; ++j)
 					Au[index[i]][j] -= Au[index[k]][j] * temp;
-			}       
+			}
 		}
 
 		/*Jordan elimination*/
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]){
 				temp = Au[index[i]][k] / Au[index[k]][k];
 				Au[index[i]][k] -= temp * Au[index[k]][k];
 				Au[index[i]][size] -= temp * Au[index[k]][size];
-			} 
+			}
 		}
 		/*solution*/
 		for (k=0; k< size; ++k)

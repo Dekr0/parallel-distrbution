@@ -10,7 +10,7 @@
 int main() {
     int i, j, k, size, swap_index;
 
-    double start,end, max, tmp;
+    double start, end, max, tmp;
     double * swap = NULL;
     double * X;
     double ** Au;
@@ -20,7 +20,7 @@ int main() {
     X = CreateVec(size);
 
     GET_TIME(start);
-#pragma omp parallel default(none) shared(size, max, swap_index, Au) private(k, i, swap, tmp, j)
+#pragma omp parallel num_threads(12) default(none) shared(size, max, swap_index, Au) private(k, i, swap, tmp, j)
     for (k = 0; k < size - 1; k++) {
         /* Pivoting */
 #pragma omp single
@@ -54,7 +54,7 @@ int main() {
     }
 
     for (k = size - 1; k > 0; k--) {
-#pragma omp parallel for default(none) shared(k, size, Au) private(i, tmp)
+#pragma omp parallel for num_threads(12) default(none) shared(k, size, Au) private(i, tmp)
         for (i = k - 1; i >= 0; i--) {
             tmp = Au[i][k] / Au[k][k];
             Au[i][k] -= tmp * Au[k][k];
@@ -62,14 +62,14 @@ int main() {
         }
     }
 
-#pragma omp parallel for default(none) shared(size, X, Au) private(k)
+#pragma omp parallel for num_threads(12) default(none) shared(size, X, Au) private(k)
     for (k = 0; k < size; k++) {
         X[k] = Au[k][size] / Au[k][k];
     }
 
     GET_TIME(end);
 
-    printf("%f\n", end - start);
+//    printf("%f\n", end - start);
 
     Lab3SaveOutput(X, size, end - start);
 
