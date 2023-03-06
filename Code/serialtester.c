@@ -62,6 +62,7 @@ int main(int argc, char* argv[]){
 					Au[index[i]][j] -= Au[index[k]][j] * temp;
 			}       
 		}
+
 		/*Jordan elimination*/
 		for (k = size - 1; k > 0; --k){
 			for (i = k - 1; i >= 0; --i ){
