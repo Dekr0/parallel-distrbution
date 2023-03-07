@@ -7,7 +7,7 @@
 #include "timer.h"
 
 
-int main() {
+int main(int argc, char * args[]) {
     int i, j, k, size, swap_index;
 
     double start, end, max, tmp;
@@ -15,12 +15,22 @@ int main() {
     double * X;
     double ** Au;
 
+    long thread_count;
+    if (argc == 1) {
+        thread_count = 12;
+    } else {
+        thread_count = strtol(args[1], NULL, 10);
+        if (thread_count == 0) {
+            thread_count = 12;
+        }
+    }
+
     Lab3LoadInput(&Au, &size);
 
     X = CreateVec(size);
 
     GET_TIME(start);
-#pragma omp parallel num_threads(12) default(none) shared(size, max, swap_index, Au) private(k, i, swap, tmp, j)
+#pragma omp parallel num_threads(thread_count) default(none) shared(size, max, swap_index, Au) private(k, i, swap, tmp, j)
     for (k = 0; k < size - 1; k++) {
         /* Pivoting */
 #pragma omp single
@@ -44,7 +54,7 @@ int main() {
         }
 
         /* Gaussian */
-#pragma omp for
+#pragma omp for schedule(guided)
         for (i = k + 1; i < size; i++) {
             tmp = Au[i][k] / Au[k][k];
             for (j = k; j < size + 1; j++) {
@@ -54,7 +64,7 @@ int main() {
     }
 
     for (k = size - 1; k > 0; k--) {
-#pragma omp parallel for num_threads(12) default(none) shared(k, size, Au) private(i, tmp)
+#pragma omp parallel for schedule(static) num_threads(thread_count) default(none) shared(k, size, Au) private(i, tmp)
         for (i = k - 1; i >= 0; i--) {
             tmp = Au[i][k] / Au[k][k];
             Au[i][k] -= tmp * Au[k][k];
@@ -62,14 +72,14 @@ int main() {
         }
     }
 
-#pragma omp parallel for num_threads(12) default(none) shared(size, X, Au) private(k)
+#pragma omp parallel for schedule(static) num_threads(thread_count) default(none) shared(size, X, Au) private(k)
     for (k = 0; k < size; k++) {
         X[k] = Au[k][size] / Au[k][k];
     }
 
     GET_TIME(end);
 
-//    printf("%f\n", end - start);
+    printf("%f\n", end - start);
 
     Lab3SaveOutput(X, size, end - start);
 
