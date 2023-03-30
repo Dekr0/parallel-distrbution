@@ -50,13 +50,13 @@ int pageRank(){
     numberOfElements = sizeOfBlock * numberOfProcesses;
 
     my_r = malloc(sizeOfBlock * sizeof(double));
-    r = malloc(nodecount * sizeof(double));
-    r_pre = malloc(nodecount * sizeof(double));
+    r = malloc(numberOfElements * sizeof(double));
+    r_pre = malloc(numberOfElements * sizeof(double));
     for ( i = 0; i < nodecount; ++i)
         r[i] = 1.0 / nodecount;
     
-    my_contribution = malloc(numberOfElements * sizeof(double));
-    contribution = malloc(nodecount * sizeof(double));
+    my_contribution = malloc(sizeOfBlock * sizeof(double));
+    contribution = malloc(numberOfElements * sizeof(double));
     for ( i = 0; i < nodecount; ++i)
         contribution[i] = r[i] / nodehead[i].num_out_links * DAMPING_FACTOR;
     damp_const = (1.0 - DAMPING_FACTOR) / nodecount;
