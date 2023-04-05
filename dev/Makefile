@@ -3,7 +3,7 @@ main:
 datatrim:
 	gcc datatrim.c -o datatrim
 tester:
-	gcc serialtester.c Lab4_IO.c -o serialtester -lm 
+	gcc serialtester.c Lab4_IO.c -o tester -lm 
 all: main datatrim tester
 clean:
 	rm main datatrim tester
