@@ -113,6 +113,7 @@ double rel_error(double *r, double *t, int size){
     return sqrt(norm_diff/norm_vec);
 }
 
+// copy all the value from vector r to vector t
 int vec_cp(double *r, double *t, int size){
     int i;
     for (i = 0; i < size; ++i) t[i] = r[i];

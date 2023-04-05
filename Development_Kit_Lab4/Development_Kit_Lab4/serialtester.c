@@ -27,7 +27,7 @@
 #define THRESHOLD 0.0001
 
 int main (int argc, char* argv[]){
-    struct node *nodehead;
+    struct node *nodehead; // an array of node ?
     int nodecount;
     double *r, *r_pre, *contribution;
     int i, j;
@@ -64,32 +64,53 @@ int main (int argc, char* argv[]){
     cst_addapted_threshold = THRESHOLD;
     
     if (node_init(&nodehead, 0, nodecount)) return 254;
+
     // initialize variables
-    r = malloc(nodecount * sizeof(double));
-    r_pre = malloc(nodecount * sizeof(double));
-    for ( i = 0; i < nodecount; ++i)
+    r = malloc(nodecount * sizeof(double)); // current / next iteration
+    r_pre = malloc(nodecount * sizeof(double)); // previous iteration
+
+    // initial assignment r_i(0) - equation (1)
+    for (i = 0; i < nodecount; ++i) 
         r[i] = 1.0 / nodecount;
+
+     // the second term in equation (3)
     contribution = malloc(nodecount * sizeof(double));
-    for ( i = 0; i < nodecount; ++i)
+    
+    // the second term in equation (3) at t = 0
+    // why t = 0 ? r[i] is storing 1.0 / nodecount right now => t = 0
+    for (i = 0; i < nodecount; ++i) 
         contribution[i] = r[i] / nodehead[i].num_out_links * DAMPING_FACTOR;
+    
     damp_const = (1.0 - DAMPING_FACTOR) / nodecount;
+    
     // CORE CALCULATION
     // GET_TIME(start);
-    do{
+    do {
         ++iterationcount;
-        vec_cp(r, r_pre, nodecount);
+
+        // copy the value from vector r to vector r_pre
+        vec_cp(r, r_pre, nodecount); 
+        
         // update the value
-        for ( i = 0; i < nodecount; ++i){
-            r[i] = 0;
-            for ( j = 0; j < nodehead[i].num_in_links; ++j)
+        for (i = 0; i < nodecount; ++i) {
+            // reset the value of current vector
+            r[i] = 0; 
+            
+            // nodehead[i] -> get node i
+            // nodehead[i].num_in_links -> number of links go into node i
+            // loop through every node that connects to node i
+            for (j = 0; j < nodehead[i].num_in_links; ++j)
+                // the sumation in the second term
+                // find the contribution of node j => d * r_i(t) / l_j
                 r[i] += contribution[nodehead[i].inlinks[j]];
             r[i] += damp_const;
         }
+        
         // update and broadcast the contribution
-        for ( i=0; i<nodecount; ++i){
+        for (i=0; i < nodecount; ++i) {
             contribution[i] = r[i] / nodehead[i].num_out_links * DAMPING_FACTOR;
         }
-    }while(rel_error(r, r_pre, nodecount) >= EPSILON);
+    } while(rel_error(r, r_pre, nodecount) >= EPSILON);
     // GET_TIME(end);
     // printf("Program converged at %d th iteration.\nElapsed time %f.\n", iterationcount, end-start);
 

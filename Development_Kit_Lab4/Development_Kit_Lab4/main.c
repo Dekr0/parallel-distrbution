@@ -12,13 +12,15 @@
 #define DAMPING_FACTOR 0.85
 
 int pageRank();
-int main(int argc, char* argv[])
-{
+
+
+int main(int argc, char* argv[]) {
     pageRank();
     return 0;
 }
 
-int pageRank(){
+
+int pageRank() {
     struct node *nodehead;
     int nodecount;
     double *r, *r_pre, *contribution, *my_r, *my_contribution;
@@ -35,6 +37,7 @@ int pageRank(){
         printf("Error opening the data_input_meta file.\n");
         return 254;
     }
+
     fscanf(ip, "%d\n", &nodecount);
     fclose(ip);
 
@@ -44,9 +47,10 @@ int pageRank(){
 
     if (node_init(&nodehead, 0, nodecount)) return 254;
 
-    sizeOfBlock = (int) (nodecount/numberOfProcesses);
-    if((sizeOfBlock * numberOfProcesses) != nodecount)
+    sizeOfBlock = (int) (nodecount / numberOfProcesses);
+    if ((sizeOfBlock * numberOfProcesses) != nodecount)
         sizeOfBlock+=1;
+
     numberOfElements = sizeOfBlock * numberOfProcesses;
 
     my_r = malloc(sizeOfBlock * sizeof(double));
@@ -57,25 +61,24 @@ int pageRank(){
     
     my_contribution = malloc(sizeOfBlock * sizeof(double));
     contribution = malloc(numberOfElements * sizeof(double));
-    for ( i = 0; i < nodecount; ++i)
+    for (i = 0; i < nodecount; ++i)
         contribution[i] = r[i] / nodehead[i].num_out_links * DAMPING_FACTOR;
     damp_const = (1.0 - DAMPING_FACTOR) / nodecount;
 
     GET_TIME(start);
-
-    do{
-        if(currentProcessRank == 0){
+    do {
+        if (currentProcessRank == 0) {
             ++iterationcount;
             vec_cp(r, r_pre, nodecount);
         }
         
         head = currentProcessRank * sizeOfBlock;
-        tail =( currentProcessRank+1) * sizeOfBlock -1;
+        tail = (currentProcessRank + 1) * sizeOfBlock - 1;
 
         for(i = head; i < nodecount && i<= tail; i++){
             val = i-head;
             my_r[val] = 0;
-            for ( j = 0; j < nodehead[i].num_in_links; j++){
+            for (j = 0; j < nodehead[i].num_in_links; j++){
                 my_r[val] += contribution[nodehead[i].inlinks[j]];
             }
             my_r[val] += damp_const;
@@ -97,12 +100,13 @@ int pageRank(){
 
     }
     while(flag);
-
     GET_TIME(end);
+
+    printf("%f", end - start);
 
     MPI_Finalize();
 
-    if(currentProcessRank ==0){
+    if (currentProcessRank == 0){
         Lab4_saveoutput(r, nodecount, end-start);
         node_destroy(nodehead, nodecount);
         free(contribution);
