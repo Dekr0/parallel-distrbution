@@ -82,21 +82,22 @@ int pageRank() {
         head = currentProcessRank * sizeOfBlock;
         tail = (currentProcessRank + 1) * sizeOfBlock - 1;
 
-        for(i = head; i < nodeCount && i<= tail; i++){
+        for (i = head; i < nodeCount && i<= tail; i++) {
             val = i-head;
             local_r[val] = 0;
-            for (j = 0; j < nodeHead[i].num_in_links; j++){
+            for (j = 0; j < nodeHead[i].num_in_links; j++) {
                 local_r[val] += contribution[nodeHead[i].inlinks[j]];
             }
             local_r[val] += damp_const;
         }
 
-        for(i = head; i < nodeCount && i<= tail; i++){
-            val = i-head;
+        for (i = head; i < nodeCount && i<= tail; i++) {
+            val = i - head;
             local_contribution[val] = local_r[val] / nodeHead[i].num_out_links * DAMPING_FACTOR;
         }
 
         MPI_Gather(local_r, sizeOfBlock, MPI_DOUBLE, r, sizeOfBlock, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
         MPI_Allgather(local_contribution, sizeOfBlock, MPI_DOUBLE, contribution, sizeOfBlock, MPI_DOUBLE, MPI_COMM_WORLD);
 
         if (currentProcessRank == 0) {
